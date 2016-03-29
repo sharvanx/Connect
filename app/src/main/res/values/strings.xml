@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Connect</string>
+    <string name="title_activity_selector">SelectorActivity</string>
+    <string name="selecttext">Select Device Mode:</string>
+    <string name="switchname">Router</string>
+    <string name="finding_service">Finding local services</string>
+    <string name="btn_send">Send</string>
+    <string name="txt_hint">Type Message</string>
+</resources>
