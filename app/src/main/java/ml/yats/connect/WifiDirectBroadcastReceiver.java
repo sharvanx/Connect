@@ -12,8 +12,6 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -96,8 +94,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
                 Log.d("receiver", "wifi not connected");
             }
 
-        }else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION
-                .equals(action)) {
+        } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
 
             WifiP2pDevice device = (WifiP2pDevice) intent
                     .getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
@@ -136,7 +133,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
             activity.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                activity.mGroupInfoText.setText(groupDetails);
+                    activity.mGroupInfoText.setText(groupDetails);
                 }
             });
 
@@ -157,12 +154,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo p2pInfo) {
         if(p2pInfo!=null) {
-            Log.d("conninfo",p2pInfo.toString());
-            activity.getHandler().obtainMessage(MainActivity.START_CHAT).sendToTarget();
-            Thread handler = null;
+            Log.d("conninfo", p2pInfo.toString());
             if (p2pInfo.isGroupOwner) {
-                Log.d(TAG, "Connected as group owner");
                 if(!activity.isSocketCreated) {
+                    Log.d(TAG, "Connected as group owner");
+                    activity.getHandler().obtainMessage(MainActivity.START_CHAT).sendToTarget();
+                    Thread handler = null;
                     try {
                         handler = new GroupOwnerSocketHandler(
                                 activity.getHandler());
@@ -175,6 +172,25 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
                         return;
                     }
                 }
+            }
+        }
+        Thread handler = null;
+        /*
+         * The group owner accepts connections using a server socket and then spawns a
+         * client socket for every client. This is handled by {@code
+         * GroupOwnerSocketHandler}
+         */
+        activity.getHandler().obtainMessage(MainActivity.START_CHAT);
+        if (p2pInfo.isGroupOwner) {
+            Log.d(TAG, "Connected as group owner");
+            try {
+                handler = new GroupOwnerSocketHandler(
+                        activity.getHandler());
+                handler.start();
+            } catch (IOException e) {
+                Log.d(TAG,
+                        "Failed to create a server thread - " + e.getMessage());
+                return;
             }
         }
     }

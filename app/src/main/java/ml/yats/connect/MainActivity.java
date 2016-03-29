@@ -46,7 +46,6 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     public static final int MESSAGE_READ = 0x400 + 1;
     public static final int MY_HANDLE = 0x400 + 2;
     public static final int START_CHAT = 0x400 + 3;
-
     static final int SERVER_PORT = 8080;
 
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
@@ -74,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         mGroupInfoText = (TextView) findViewById(R.id.groupInfoText);
         wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
         if(!wifiManager.isWifiEnabled()) wifiManager.setWifiEnabled(true);
+        mGroupInfoText = (TextView) findViewById(R.id.groupInfoText);
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
         initialize();
@@ -145,16 +145,16 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                         // A service has been discovered. Is this our app?
 
                         if (instanceName.equalsIgnoreCase(SERVICE_INSTANCE)) {
-                                WiFiP2pService service = new WiFiP2pService();
-                                service.device = srcDevice;
-                                service.instanceName = instanceName;
-                                service.serviceRegistrationType = registrationType;
-                            if(!deviceList.contains(service))
+                            WiFiP2pService service = new WiFiP2pService();
+                            service.device = srcDevice;
+                            service.instanceName = instanceName;
+                            service.serviceRegistrationType = registrationType;
+                            if (!deviceList.contains(service))
                                 deviceList.add(service);
-                                Log.d("main", "onBonjourServiceAvailable "
-                                        + instanceName);
-                            }
+                            Log.d("main", "onBonjourServiceAvailable "
+                                    + instanceName);
                         }
+                    }
                 }, new WifiP2pManager.DnsSdTxtRecordListener() {
 
                     /**

@@ -6,7 +6,6 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -15,9 +14,8 @@ public class ClientSocketHandler extends Thread {
     private static final String TAG = "ClientSocketHandler";
     private Handler handler;
     private ChatManager chat;
-
     public ClientSocketHandler(Handler handler) {
-        this.handler = handler;;
+        this.handler = handler;
     }
 
     @Override
