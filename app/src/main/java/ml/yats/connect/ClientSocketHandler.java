@@ -26,10 +26,7 @@ public class ClientSocketHandler extends Thread {
             socket.connect(new InetSocketAddress("192.168.49.1",
                     MainActivity.SERVER_PORT), 10000);
             Log.d(TAG, "Launching the client I/O handler");
-            OutputStream ostream = socket.getOutputStream();
-            byte[] msg = "Hello".getBytes();
-            ostream.write(msg);
-            chat = new ChatManager(socket, handler);
+            chat = new ChatManager(socket, handler, false);
             new Thread(chat).start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -38,7 +35,6 @@ public class ClientSocketHandler extends Thread {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            return;
         }
     }
 

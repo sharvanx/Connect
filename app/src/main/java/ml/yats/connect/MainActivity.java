@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     private final IntentFilter intentFilter = new IntentFilter();
     private WifiDirectBroadcastReceiver receiver = null;
     private boolean isWifiP2pEnabled = false;
-    private ArrayList<WiFiP2pService> deviceList = new ArrayList<WiFiP2pService>();
+    private ArrayList<WiFiP2pService> deviceList = new ArrayList<>();
     private WifiP2pDnsSdServiceRequest serviceRequest;
     protected TextView mGroupInfoText;
     protected boolean isGroupFormed = false;
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void startRegistration(Map<String,String> s) {
-        Map<String, String> record = new HashMap<String, String>(s);
+        Map<String, String> record = new HashMap<>(s);
         Log.d("startreg main", s.toString());
         record.put(TXTRECORD_PROP_AVAILABLE, "visible");
 
@@ -170,13 +170,23 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                             WifiConfiguration conf = new WifiConfiguration();
                             conf.SSID = "\"" + record.get("SSID") + "\"";
                             conf.preSharedKey = "\"" + record.get("Password") + "\"";
-                            wifiManager.addNetwork(conf);
                             List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+                            boolean networkExists = false;
+                            for (WifiConfiguration i : list) {
+                                if (i.SSID != null && i.SSID.equals("\"" + record.get("SSID") + "\"")) {
+                                    networkExists = true;
+                                    wifiManager.updateNetwork(conf);
+                                    Log.d("main","network exists");
+                                    break;
+                                }
+                            }
+                            if(!networkExists) wifiManager.addNetwork(conf);
                             for (WifiConfiguration i : list) {
                                 if (i.SSID != null && i.SSID.equals("\"" + record.get("SSID") + "\"")) {
                                     wifiManager.disconnect();
                                     wifiManager.enableNetwork(i.networkId, true);
                                     wifiManager.reconnect();
+                                    Log.d("main","connecting to " + i.SSID);
                                     break;
                                 }
                             }

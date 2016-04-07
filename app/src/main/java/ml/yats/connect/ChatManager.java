@@ -17,14 +17,17 @@ public class ChatManager implements Runnable {
 
     private Socket socket = null;
     private Handler handler;
+    private boolean isServer;
 
-    public ChatManager(Socket socket, Handler handler) {
+    public ChatManager(Socket socket, Handler handler, boolean isServer) {
         this.socket = socket;
         this.handler = handler;
+        this.isServer=isServer;
+        GroupOwnerSocketHandler.chats.add(this);
     }
 
-    private InputStream iStream;
-    private OutputStream oStream;
+    protected InputStream iStream;
+    protected OutputStream oStream;
     private static final String TAG = "ChatHandler";
 
     @Override
@@ -50,6 +53,12 @@ public class ChatManager implements Runnable {
                     Log.d(TAG, "Rec:" + String.valueOf(buffer));
                     handler.obtainMessage(MainActivity.MESSAGE_READ,
                             bytes, -1, buffer).sendToTarget();
+                    if(isServer){
+                        for(ChatManager chat : GroupOwnerSocketHandler.chats) {
+                            //if(chat!=this)
+                            chat.write(buffer);
+                        }
+                    }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                 }
@@ -59,6 +68,7 @@ public class ChatManager implements Runnable {
         } finally {
             try {
                 socket.close();
+                GroupOwnerSocketHandler.chats.remove(this);
             } catch (IOException e) {
                 e.printStackTrace();
             }

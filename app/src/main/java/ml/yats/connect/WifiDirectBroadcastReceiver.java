@@ -28,12 +28,13 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
     private MainActivity activity;
 
     public WifiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel,
-                                       MainActivity activity){
+                                       MainActivity activity) {
         super();
         this.manager = manager;
         this.channel = channel;
         this.activity = activity;
     }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -51,9 +52,9 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
             if (manager == null) {
                 return;
             }
-        Log.d("receiver","P2P Connection Changed");
+            Log.d("receiver", "P2P Connection Changed");
             manager.requestGroupInfo(channel, this);
-            NetworkInfo networkInfo = (NetworkInfo) intent
+            NetworkInfo networkInfo = intent
                     .getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected()) {
@@ -64,17 +65,20 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
                 // It's a disconnect
                 Log.d("receiver", "p2p not connected");
             }
-        }else if(WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(action)){
+        } else if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(action)) {
             //Log.d("receiver", "Network State changed");
-            if(activity.wifiManager==null) { Log.d("receiver","wifimanager null"); return;}
+            if (activity.wifiManager == null) {
+                Log.d("receiver", "wifimanager null");
+                return;
+            }
 
-            NetworkInfo networkInfo = (NetworkInfo) intent
+            NetworkInfo networkInfo = intent
                     .getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
             if (networkInfo.isConnected()) {
                 Log.d("receiver", "connected");
                 activity.setIsGroupFormed(true);
-                if(!activity.isSocketCreated) {
-                    Thread handler = null;
+                if (!activity.isSocketCreated) {
+                    Thread handler;
                     activity.getHandler().obtainMessage(MainActivity.START_CHAT).sendToTarget();
                     Log.d(TAG, "Connected as peer");
                     try {
@@ -96,7 +100,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
 
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
 
-            WifiP2pDevice device = (WifiP2pDevice) intent
+            WifiP2pDevice device = intent
                     .getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
             Log.d("receiver", "Device status -" + device.status);
 
@@ -110,15 +114,15 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
 
     @Override
     public void onFailure(int reason) {
-        Log.d("main","Local Group failed, error code " + reason);
+        Log.d("main", "Local Group failed, error code " + reason);
     }
 
 
     @Override
     public void onGroupInfoAvailable(WifiP2pGroup group) {
-        if(group!=null) {
+        if (group != null) {
             activity.setIsGroupFormed(true);
-            Map<String, String> s = new HashMap<String, String>();
+            Map<String, String> s = new HashMap<>();
             s.put("SSID", group.getNetworkName());
             s.put("Password", group.getPassphrase());
             WifiP2pDevice owner = group.getOwner();
@@ -126,7 +130,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
             //s.put("Name", owner.deviceName);
             //s.put("Status", Integer.toString(owner.status));
             final String groupDetails = s.toString();
-            if(group.isGroupOwner()) {
+            if (group.isGroupOwner()) {
                 activity.startRegistration(s);
             }
             Log.d("groupinfo", s.toString());
@@ -138,8 +142,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
             });
 
 
-        }
-        else {
+        } else {
             activity.setIsGroupFormed(false);
             activity.getHandler().post(new Runnable() {
                 @Override
@@ -153,13 +156,13 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo p2pInfo) {
-        if(p2pInfo!=null) {
+        if (p2pInfo != null) {
             Log.d("conninfo", p2pInfo.toString());
             if (p2pInfo.isGroupOwner) {
-                if(!activity.isSocketCreated) {
+                if (!activity.isSocketCreated) {
                     Log.d(TAG, "Connected as group owner");
                     activity.getHandler().obtainMessage(MainActivity.START_CHAT).sendToTarget();
-                    Thread handler = null;
+                    Thread handler;
                     try {
                         handler = new GroupOwnerSocketHandler(
                                 activity.getHandler());
@@ -169,28 +172,8 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
                         activity.isSocketCreated = false;
                         Log.d(TAG,
                                 "Failed to create a server thread - " + e.getMessage());
-                        return;
                     }
                 }
-            }
-        }
-        Thread handler = null;
-        /*
-         * The group owner accepts connections using a server socket and then spawns a
-         * client socket for every client. This is handled by {@code
-         * GroupOwnerSocketHandler}
-         */
-        activity.getHandler().obtainMessage(MainActivity.START_CHAT);
-        if (p2pInfo.isGroupOwner) {
-            Log.d(TAG, "Connected as group owner");
-            try {
-                handler = new GroupOwnerSocketHandler(
-                        activity.getHandler());
-                handler.start();
-            } catch (IOException e) {
-                Log.d(TAG,
-                        "Failed to create a server thread - " + e.getMessage());
-                return;
             }
         }
     }
