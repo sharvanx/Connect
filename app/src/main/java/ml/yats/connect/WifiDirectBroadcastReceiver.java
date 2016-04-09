@@ -3,15 +3,19 @@ package ml.yats.connect;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.DhcpInfo;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.text.format.Formatter;
 import android.util.Log;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,17 +42,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
-            // UI update to indicate wifi p2p status.
-            int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
-            if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-                // Wifi Direct mode is enabled
-                activity.setIsWifiP2pEnabled(true);
-            } else {
-                activity.setIsWifiP2pEnabled(false);
-            }
-        } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
-
+        if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             if (manager == null) {
                 return;
             }
@@ -75,21 +69,26 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver
             NetworkInfo networkInfo = intent
                     .getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
             if (networkInfo.isConnected()) {
-                Log.d("receiver", "connected");
-                activity.setIsGroupFormed(true);
-                if (!activity.isSocketCreated) {
-                    Thread handler;
-                    activity.getHandler().obtainMessage(MainActivity.START_CHAT).sendToTarget();
-                    Log.d(TAG, "Connected as peer");
-                    try {
-                        handler = new ClientSocketHandler(
-                                activity.getHandler());
-                        handler.start();
-                        activity.isSocketCreated = true;
-                    } catch (Exception e) {
-                        activity.isSocketCreated = false;
-                        Log.d(TAG,
-                                "Failed to create a client thread - " + e.getMessage());
+                int ip = activity.wifiManager.getDhcpInfo().gateway;
+                String ipAddress = Formatter.formatIpAddress(ip);
+                Log.d("receiver","connected to " + ipAddress);
+                if(ipAddress.equals("192.168.49.1")){
+                    Log.d("receiver", "connected");
+                    activity.setIsGroupFormed(true);
+                    if (!activity.isSocketCreated) {
+                        Thread handler;
+                        activity.getHandler().obtainMessage(MainActivity.START_CHAT).sendToTarget();
+                        Log.d(TAG, "Connected as peer");
+                        try {
+                            handler = new ClientSocketHandler(
+                                    activity.getHandler());
+                            handler.start();
+                            activity.isSocketCreated = true;
+                        } catch (Exception e) {
+                            activity.isSocketCreated = false;
+                            Log.d(TAG,
+                                    "Failed to create a client thread - " + e.getMessage());
+                        }
                     }
                 }
             } else {

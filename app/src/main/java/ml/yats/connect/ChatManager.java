@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 /**
  * Handles reading and writing of messages with socket buffers. Uses a Handler
@@ -17,7 +18,7 @@ public class ChatManager implements Runnable {
 
     private Socket socket = null;
     private Handler handler;
-    private boolean isServer;
+    protected boolean isServer;
 
     public ChatManager(Socket socket, Handler handler, boolean isServer) {
         this.socket = socket;
@@ -44,6 +45,7 @@ public class ChatManager implements Runnable {
             while (true) {
                 try {
                     // Read from the InputStream
+                    Arrays.fill(buffer,(byte)0);
                     bytes = iStream.read(buffer);
                     if (bytes == -1) {
                         break;
@@ -55,7 +57,7 @@ public class ChatManager implements Runnable {
                             bytes, -1, buffer).sendToTarget();
                     if(isServer){
                         for(ChatManager chat : GroupOwnerSocketHandler.chats) {
-                            //if(chat!=this)
+                            if(chat!=this)
                             chat.write(buffer);
                         }
                     }

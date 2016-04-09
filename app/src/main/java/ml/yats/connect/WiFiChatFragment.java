@@ -43,9 +43,14 @@ public class WiFiChatFragment extends Fragment {
                     @Override
                     public void onClick(View arg0) {
                         if (chatManager != null) {
-                            chatManager.write(chatLine.getText().toString()
-                                    .getBytes());
-                            pushMessage("Me: " + chatLine.getText().toString());
+                            if(chatManager.isServer) {
+                                for (ChatManager chat : GroupOwnerSocketHandler.chats) {
+                                    chat.write((MainActivity.number + " : " + chatLine.getText().toString()).getBytes());
+                                }
+                            }
+                            else
+                                chatManager.write((MainActivity.number + " : " + chatLine.getText().toString()).getBytes());
+                            pushMessage(MainActivity.number + " : " + chatLine.getText().toString());
                             chatLine.setText("");
                             chatLine.clearFocus();
                         }
@@ -55,7 +60,7 @@ public class WiFiChatFragment extends Fragment {
     }
 
     public interface MessageTarget {
-        public Handler getHandler();
+        Handler getHandler();
     }
 
     public void setChatManager(ChatManager obj) {
