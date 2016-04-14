@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,7 @@ public class GroupOwnerSocketHandler extends Thread {
     private final int THREAD_COUNT = 10;
     private Handler handler;
     private static final String TAG = "GroupOwnerSocketHandler";
-
+    public static ArrayList<ChatManager> chats = new ArrayList<>();
     public GroupOwnerSocketHandler(Handler handler) throws IOException {
         try {
             socket = new ServerSocket(8080);
@@ -47,7 +48,7 @@ public class GroupOwnerSocketHandler extends Thread {
             try {
                 // A blocking operation. Initiate a ChatManager instance when
                 // there is a new connection
-                pool.execute(new ChatManager(socket.accept(), handler));
+                pool.execute(new ChatManager(socket.accept(), handler, true));
                 Log.d(TAG, "Launching the server I/O handler");
 
             } catch (IOException e) {
@@ -55,7 +56,7 @@ public class GroupOwnerSocketHandler extends Thread {
                     if (socket != null && !socket.isClosed())
                         socket.close();
                 } catch (IOException ioe) {
-
+                    ioe.printStackTrace();
                 }
                 e.printStackTrace();
                 pool.shutdownNow();
@@ -63,5 +64,4 @@ public class GroupOwnerSocketHandler extends Thread {
             }
         }
     }
-
 }

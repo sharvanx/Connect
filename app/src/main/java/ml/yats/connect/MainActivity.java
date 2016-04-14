@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 
 public class MainActivity extends AppCompatActivity implements Handler.Callback {
 
@@ -29,28 +30,23 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     private WiFiChatFragment chatFragment;
     private final IntentFilter intentFilter = new IntentFilter();
     private WifiDirectBroadcastReceiver receiver = null;
-    private boolean isWifiP2pEnabled = false;
-    private ArrayList<WiFiP2pService> deviceList = new ArrayList<WiFiP2pService>();
+    private ArrayList<WiFiP2pService> deviceList = new ArrayList<>();
     private WifiP2pDnsSdServiceRequest serviceRequest;
     protected TextView mGroupInfoText;
     protected boolean isGroupFormed = false;
     protected boolean isSocketCreated = false;
-    private String mode;
     private Handler handler = new Handler(this);
 
     public static final String TXTRECORD_PROP_AVAILABLE = "available";
     public static final String SERVICE_INSTANCE = "_connect";
     public static final String SERVICE_REG_TYPE = "_tcp";
 
+    public static String number;
     public static final String TAG = "Connect main";
     public static final int MESSAGE_READ = 0x400 + 1;
     public static final int MY_HANDLE = 0x400 + 2;
     public static final int START_CHAT = 0x400 + 3;
     static final int SERVER_PORT = 8080;
-
-    public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
-        this.isWifiP2pEnabled = isWifiP2pEnabled;
-    }
 
     public void setIsGroupFormed(boolean isGroupFormed) {
         this.isGroupFormed = isGroupFormed;
@@ -64,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        number = getIntent().getStringExtra("number");
         chatFragment = new WiFiChatFragment();
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -91,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     }
 
     public void initialize() {
-        mode = getIntent().getStringExtra("mode");
+        String mode = getIntent().getStringExtra("mode");
         if (!isGroupFormed) {
             if (mode.equals("router")) {
                 manager.createGroup(channel, receiver);
@@ -99,12 +96,13 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
             } else {
                 Log.d("main", "client mode");
                 discoverService();
+                Timer t = new Timer();
             }
         }
     }
 
     public void startRegistration(Map<String,String> s) {
-        Map<String, String> record = new HashMap<String, String>(s);
+        Map<String, String> record = new HashMap<>(s);
         Log.d("startreg main", s.toString());
         record.put(TXTRECORD_PROP_AVAILABLE, "visible");
 
@@ -170,13 +168,24 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                             WifiConfiguration conf = new WifiConfiguration();
                             conf.SSID = "\"" + record.get("SSID") + "\"";
                             conf.preSharedKey = "\"" + record.get("Password") + "\"";
-                            wifiManager.addNetwork(conf);
                             List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+                            boolean networkExists = false;
+                            for (WifiConfiguration i : list) {
+                                if (i.SSID != null && i.SSID.equals("\"" + record.get("SSID") + "\"")) {
+                                    networkExists = true;
+                                    wifiManager.updateNetwork(conf);
+                                    Log.d("main","network exists");
+                                    break;
+                                }
+                            }
+                            if(!networkExists) wifiManager.addNetwork(conf);
+                            list = wifiManager.getConfiguredNetworks();
                             for (WifiConfiguration i : list) {
                                 if (i.SSID != null && i.SSID.equals("\"" + record.get("SSID") + "\"")) {
                                     wifiManager.disconnect();
                                     wifiManager.enableNetwork(i.networkId, true);
                                     wifiManager.reconnect();
+                                    Log.d("main","connecting to " + i.SSID);
                                     break;
                                 }
                             }
@@ -237,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
                 // construct a string from the valid bytes in the buffer
                 String readMessage = new String(readBuf, 0, msg.arg1);
                 Log.d(TAG, readMessage);
-                (chatFragment).pushMessage("Buddy: " + readMessage);
+                (chatFragment).pushMessage(readMessage);
                 //appendStatus("Buddy: " + readMessage);
                 break;
 
