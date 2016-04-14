@@ -27,7 +27,7 @@ public class SelectorActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent i = new Intent("ml.yats.connect.mainactivity");
                 i.putExtra("mode","router");
-                i.putExtra("number",mPhoneText.getText());
+                i.putExtra("number",mPhoneText.getText().toString());
                 startActivity(i);
 
             }
@@ -38,7 +38,7 @@ public class SelectorActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent i = new Intent("ml.yats.connect.mainactivity");
                 i.putExtra("mode","client");
-                i.putExtra("number",mPhoneText.getText());
+                i.putExtra("number",mPhoneText.getText().toString());
                 startActivity(i);
             }
         });

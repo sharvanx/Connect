@@ -45,7 +45,6 @@ public class ChatManager implements Runnable {
             while (true) {
                 try {
                     // Read from the InputStream
-                    Arrays.fill(buffer,(byte)0);
                     bytes = iStream.read(buffer);
                     if (bytes == -1) {
                         break;
